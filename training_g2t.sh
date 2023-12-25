@@ -1,0 +1,18 @@
+CUDA_VISIBLE_DEVICES=0 python /content/AnswerGen_G2T/cli_g2t.py \
+        --do_train \
+        --output_dir out/vn_g2t_t5 \
+        --train_file /content/drive/MyDrive/jointgt_data/train_data \
+        --predict_file /content/drive/MyDrive/jointgt_data/test_data \
+        --model_path VietAI/vit5-base \
+        --tokenizer_path VietAI/vit5-base \
+        --dataset VNHistory \
+        --train_batch_size 8 \
+        --predict_batch_size 8 \
+        --max_input_length 256 \
+        --max_output_length 128 \
+        --append_another_bos \
+        --learning_rate 5e-5 \
+        --num_train_epochs 20 \
+        --warmup_steps 1600 \
+        --eval_period 50 \
+        --num_beams 1

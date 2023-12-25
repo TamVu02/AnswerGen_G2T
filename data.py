@@ -25,8 +25,6 @@ class VNHistoryDataLoader(DataLoader):
                                                num_workers=args.num_workers)
 
 
-# Downstream dataset (webnlg, webquestions, pathquestions)
-# Most parts are similar to WikidataDataset
 class VNHistoryDataset(Dataset):
     def __init__(self, logger, args, data_path, tokenizer, mode):
         self.data_path = data_path
