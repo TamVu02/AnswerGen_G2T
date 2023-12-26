@@ -52,20 +52,10 @@ class VNHistoryDataset(Dataset):
         self.graph_ids, self.text_ids = self.tokenizer.encode(' [graph]', add_special_tokens=False), \
                                         self.tokenizer.encode(' [text]', add_special_tokens=False)
 
-        if self.args.model_name == "bart":
-            self.mask_token = self.tokenizer.mask_token
-            self.mask_token_id = self.tokenizer.mask_token_id
-        else:
-            self.mask_token = self.tokenizer.additional_special_tokens[0]
-            self.mask_token_id = self.tokenizer.convert_tokens_to_ids(self.tokenizer.additional_special_tokens[0])
+        self.mask_token = self.tokenizer.additional_special_tokens[0]
+        self.mask_token_id = self.tokenizer.convert_tokens_to_ids(self.tokenizer.additional_special_tokens[0])
 
-        if self.args.model_name == "bart":
-            if self.args.append_another_bos:
-                self.add_bos_id = [self.tokenizer.bos_token_id] * 2
-            else:
-                self.add_bos_id = [self.tokenizer.bos_token_id]
-        else:
-            self.add_bos_id = []
+        self.add_bos_id = []
 
     def __len__(self):
         return len(self.data)

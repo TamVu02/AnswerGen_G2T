@@ -88,9 +88,7 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
                     print(batch[tmp_id])
 
             loss = model(input_ids=batch[0], attention_mask=batch[1],
-                         decoder_input_ids=batch[2], decoder_attention_mask=batch[3],input_node_ids=batch[4],
-                         input_edge_ids=batch[5], node_length=batch[6], edge_length=batch[7], adj_matrix=batch[8],
-                         is_training=True)
+                         decoder_input_ids=batch[2], decoder_attention_mask=batch[3])
 
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu.

@@ -107,7 +107,7 @@ def main():
     torch.manual_seed(args.seed)
     args.n_gpu = torch.cuda.device_count()
 
-    if args.n_gpu > 0:s
+    if args.n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
     if not args.do_train and not args.do_predict:
