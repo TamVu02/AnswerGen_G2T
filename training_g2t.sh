@@ -6,7 +6,7 @@ CUDA_VISIBLE_DEVICES=0 python /content/AnswerGen_G2T/cli_g2t.py \
         --model_path VietAI/vit5-base \
         --tokenizer_path VietAI/vit5-base \
         --dataset VNHistory \
-        --train_batch_size 8 \
+        --train_batch_size 16 \
         --predict_batch_size 8 \
         --max_input_length 256 \
         --max_output_length 128 \
@@ -14,5 +14,5 @@ CUDA_VISIBLE_DEVICES=0 python /content/AnswerGen_G2T/cli_g2t.py \
         --learning_rate 5e-5 \
         --num_train_epochs 20 \
         --warmup_steps 1600 \
-        --eval_period 50 \
-        --num_beams 1
+        --eval_period 400 \
+        --num_beams 4

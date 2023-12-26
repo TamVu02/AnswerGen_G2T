@@ -8,7 +8,7 @@ import sys
 import copy
 import random
 import time
-
+from nltk.translate.bleu_score import corpus_bleu,SmoothingFunction
 import torch
 from torch.utils.data import Dataset, TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
@@ -227,7 +227,7 @@ class VNHistoryDataset(Dataset):
         current_text = random.choice(entry['text'])
 
         for word in current_text.split():
-            word_label_ids = self.tokenizer.encode(" {}".format(word), add_special_tokens=False)
+            word_label_ids = self.tokenizer.encode(" {}".format(word), add_special_tokens=False, max_length=256, pad_to_max_length=True)
             word_label_tokens = copy.deepcopy(word)
 
             words_label_ids += word_label_ids
@@ -261,6 +261,8 @@ class VNHistoryDataset(Dataset):
             input_edge_ids_ar)
         assert len(decoder_label_ids) == len(decoder_attn_mask) == self.args.max_output_length
 
+        words_label_ids=self.tokenizer.encode(current_text, add_special_tokens=False, max_length=128, pad_to_max_length=True)
+
         input_ids_ar = torch.LongTensor(input_ids_ar)
         attn_mask_ar = torch.LongTensor(attn_mask_ar)
         decoder_label_ids = torch.LongTensor(decoder_label_ids)
@@ -270,6 +272,9 @@ class VNHistoryDataset(Dataset):
         node_length_ar = torch.LongTensor([node_length_ar])
         edge_length_ar = torch.LongTensor([edge_length_ar])
         adj_matrix_ar = torch.LongTensor(adj_matrix_ar)
+        words_label_ar = torch.LongTensor(words_label_ids)
 
         return input_ids_ar, attn_mask_ar, decoder_label_ids, decoder_attn_mask, \
-               input_node_ids_ar, input_edge_ids_ar, node_length_ar, edge_length_ar, adj_matrix_ar
+               input_node_ids_ar, input_edge_ids_ar, node_length_ar, edge_length_ar, adj_matrix_ar, words_label_ar
+
+

@@ -11,9 +11,10 @@ from transformers import T5ForConditionalGeneration as MyT5
 
 
 from data import VNHistoryDataset,VNHistoryDataLoader
-#from data import evaluate_bleu
+from metric import evaluate_bleu
 from tqdm import tqdm, trange
 import json
+
 
 
 def run(args, logger):
@@ -83,12 +84,12 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
             global_step += 1
             if torch.cuda.is_available():
                 batch = [b.to(torch.device("cuda")) for b in batch]
-            if global_step == 1:
-                for tmp_id in range(9):
-                    print(batch[tmp_id])
-
-            loss = model(input_ids=batch[0], attention_mask=batch[1],
-                         decoder_input_ids=batch[2], decoder_attention_mask=batch[3])
+            # if global_step == 1:
+            #     for tmp_id in range(9):
+            #         print(batch[tmp_id])
+            outputs = model(input_ids=batch[0], attention_mask=batch[1],
+                         decoder_input_ids=batch[2], decoder_attention_mask=batch[3],labels=batch[9])
+            loss = outputs.loss
 
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu.
@@ -144,11 +145,6 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
             batch = [b.to(torch.device("cuda")) for b in batch]
         outputs = model.generate(input_ids=batch[0],
                                  attention_mask=batch[1],
-                                 input_node_ids=batch[4],
-                                 input_edge_ids=batch[5],
-                                 node_length=batch[6],
-                                 edge_length=batch[7],
-                                 adj_matrix=batch[8],
                                  num_beams=args.num_beams,
                                  length_penalty=args.length_penalty,
                                  max_length=args.max_output_length,
@@ -166,6 +162,8 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
                 f.write(pred + '\n')
         logger.info("Saved prediction in {}".format(save_path))
 
-    data_ref = [data_ele['text'] for data_ele in dev_dataloader.dataset.data]
+    data_ref = [data_ele['text'][0] for data_ele in dev_dataloader.dataset.data]
     assert len(predictions) == len(data_ref)
-    #return evaluate_bleu(data_ref=data_ref, data_sys=predictions)
+    data_ref=[ref.split() for ref in data_ref]
+    data_sys=[pred.split() for pred in predictions]
+    return evaluate_bleu(data_ref=data_ref, data_sys=data_sys)
