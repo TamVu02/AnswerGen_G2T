@@ -164,6 +164,4 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
 
     data_ref = [data_ele['text'][0] for data_ele in dev_dataloader.dataset.data]
     assert len(predictions) == len(data_ref)
-    data_ref=[ref.split() for ref in data_ref]
-    data_sys=[pred.split() for pred in predictions]
-    return evaluate_bleu(data_ref=data_ref, data_sys=data_sys)
+    return evaluate_bleu(data_ref=data_ref, data_sys=predictions)
