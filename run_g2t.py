@@ -160,8 +160,6 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
         for input_, output in zip(batch[0], outputs):
             pred = tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=args.clean_up_spaces)
             predictions.append(pred.strip())
-            break
-    print(predictions)
 
     # Save the generated results
     if save_predictions:
