@@ -228,8 +228,8 @@ class VNHistoryDataset(Dataset):
         current_text = random.choice(entry['text'])
 
         for word in current_text.split():
-            word_label_ids = self.tokenizer.encode(" {}".format(word), add_special_tokens=False, max_length=256,
-                                                   padding=True)
+            word_label_ids = self.tokenizer.encode(" {}".format(word), add_special_tokens=False, max_length=128,
+                                                   padding=128)
             word_label_tokens = copy.deepcopy(word)
 
             words_label_ids += word_label_ids
@@ -263,7 +263,7 @@ class VNHistoryDataset(Dataset):
             input_edge_ids_ar)
         assert len(decoder_label_ids) == len(decoder_attn_mask) == self.args.max_output_length
 
-        words_label_ids = self.tokenizer.encode(current_text, add_special_tokens=False, max_length=128, padding=True)
+        words_label_ids = self.tokenizer.encode(current_text, add_special_tokens=False, max_length=128, padding=128)
 
         input_ids_ar = torch.LongTensor(input_ids_ar)
         attn_mask_ar = torch.LongTensor(attn_mask_ar)
