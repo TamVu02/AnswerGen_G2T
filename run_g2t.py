@@ -6,17 +6,18 @@ import random
 from transformers import AutoTokenizer
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-#from modeling_t5 import MyT5ForConditionalGeneration as MyT5
+# from modeling_t5 import MyT5ForConditionalGeneration as MyT5
 from transformers import T5ForConditionalGeneration as MyT5
 
-
-from data import VNHistoryDataset,VNHistoryDataLoader
-from metric import evaluate_bleu
+from data import VNHistoryDataset, VNHistoryDataLoader
 from tqdm import tqdm, trange
 import json
 
+import evaluate
+from loguru import logger as log
 
 
+# run the script: training_g2t.sh / infer_g2t.sh
 def run(args, logger):
     # Initialize tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_path)
@@ -42,9 +43,10 @@ def run(args, logger):
         t_total = len(train_dataloader) // args.gradient_accumulation_steps * args.num_train_epochs
         no_decay = ['bias', 'LayerNorm.weight']
         optimizer_grouped_parameters = [
-            {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)], 'weight_decay': args.weight_decay},
+            {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+             'weight_decay': args.weight_decay},
             {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-            ]
+        ]
         optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
         if not args.no_lr_decay:
             scheduler = get_linear_schedule_with_warmup(optimizer,
@@ -54,7 +56,6 @@ def run(args, logger):
             scheduler = get_linear_schedule_with_warmup(optimizer,
                                                         num_warmup_steps=0,
                                                         num_training_steps=1000000)
-
 
         train(args, logger, model, train_dataloader, dev_dataloader, optimizer, scheduler, tokenizer)
     if args.do_predict:
@@ -67,6 +68,7 @@ def run(args, logger):
         model.eval()
         ems = inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=True)
         logger.info("%s on %s data: %.4f" % (dev_dataloader.dataset.metric, dev_dataloader.dataset.data_type, ems))
+
 
 def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, scheduler, tokenizer):
     model.train()
@@ -88,7 +90,7 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
             #     for tmp_id in range(9):
             #         print(batch[tmp_id])
             outputs = model(input_ids=batch[0], attention_mask=batch[1],
-                         decoder_input_ids=batch[2], decoder_attention_mask=batch[3],labels=batch[9])
+                            decoder_input_ids=batch[2], decoder_attention_mask=batch[3], labels=batch[9])
             loss = outputs.loss
 
             if args.n_gpu > 1:
@@ -110,7 +112,7 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
             # Print loss and evaluate on the valid set
             if global_step % args.eval_period == 0:
                 model.eval()
-                curr_em = inference(model if args.n_gpu == 1 else model.module, dev_dataloader, tokenizer, args, logger)
+                curr_em = inference(model if args.n_gpu == 1 else model.module, dev_dataloader, tokenizer, args, logger)['bleu']
                 logger.info("Step %d Train loss %.2f Learning rate %.2e %s %.2f%% on epoch=%d" % (
                     global_step,
                     np.mean(train_losses),
@@ -123,7 +125,8 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
                     model_to_save = model.module if hasattr(model, 'module') else model
                     model_to_save.save_pretrained(args.output_dir)
                     logger.info("Saving model with best %s: %.2f%% -> %.2f%% on epoch=%d, global_step=%d" %
-                                (dev_dataloader.dataset.metric, best_accuracy * 100.0, curr_em * 100.0, epoch, global_step))
+                                (dev_dataloader.dataset.metric, best_accuracy * 100.0, curr_em * 100.0, epoch,
+                                 global_step))
                     best_accuracy = curr_em
                     wait_step = 0
                     stop_training = False
@@ -148,7 +151,7 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
                                  num_beams=args.num_beams,
                                  length_penalty=args.length_penalty,
                                  max_length=args.max_output_length,
-                                 early_stopping=True,)
+                                 early_stopping=True, )
         # Convert ids to tokens
         for input_, output in zip(batch[0], outputs):
             pred = tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=args.clean_up_spaces)
@@ -164,4 +167,24 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
 
     data_ref = [data_ele['text'][0] for data_ele in dev_dataloader.dataset.data]
     assert len(predictions) == len(data_ref)
-    return evaluate_bleu(data_ref=data_ref, data_sys=predictions)
+    return evaluate_bleu(data_ref=data_ref, data_sys=predictions, tokenizer=tokenizer)
+
+
+bleu = evaluate.load('bleu')
+
+
+def evaluate_bleu(data_ref, data_sys, tokenizer):
+    global bleu
+    '''
+    predictions (list of strs): Translations to score. predictions = ["hello there general kenobi", "foo bar foobar"]
+    references (list of lists of strs): references for each translation. references = [
+     ["hello there general kenobi", "hello there !"],
+     ["foo bar foobar"]
+    ]
+    '''
+    try:
+        output_metric = bleu.compute(predictions=data_sys, references=data_ref)
+    except Exception as e:
+        log.warning(e)
+        output_metric = {'bleu': 0}
+    return output_metric
