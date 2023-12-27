@@ -166,7 +166,7 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
                 f.write(pred + '\n')
         logger.info("Saved prediction in {}".format(save_path))
 
-    data_ref = [data_ele['text'][0] for data_ele in dev_dataloader.dataset.data]
+    data_ref = [data_ele['text'] for data_ele in dev_dataloader.dataset.data]
     assert len(predictions) == len(data_ref)
     return evaluate_bleu(data_ref=data_ref, data_sys=predictions)
 
