@@ -113,15 +113,16 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
             if global_step % args.eval_period == 0:
                 model.eval()
                 curr_em = inference(model if args.n_gpu == 1 else model.module, dev_dataloader, tokenizer, args, logger)['bleu']
+                print(f'Step {global_step} Train loss {np.mean(train_losses)} Learning rate {scheduler.get_lr()[0]} {dev_dataloader.dataset.metric} {curr_em} on epoch={epoch}')
                 logger.info("Step %d Train loss %.2f Learning rate %.2e %s %.2f%% on epoch=%d" % (
                     global_step,
                     np.mean(train_losses),
                     scheduler.get_lr()[0],
                     dev_dataloader.dataset.metric,
-                    curr_em * 100,
+                    curr_em*100,
                     epoch))
                 train_losses = []
-                if best_accuracy < curr_em:
+                if best_accuracy < curr_em*100:
                     model_to_save = model.module if hasattr(model, 'module') else model
                     model_to_save.save_pretrained(args.output_dir)
                     logger.info("Saving model with best %s: %.2f%% -> %.2f%% on epoch=%d, global_step=%d" %
@@ -165,15 +166,15 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
                 f.write(pred + '\n')
         logger.info("Saved prediction in {}".format(save_path))
 
-    data_ref = [data_ele['text'][0] for data_ele in dev_dataloader.dataset.data]
+    data_ref = [data_ele['text'] for data_ele in dev_dataloader.dataset.data]
     assert len(predictions) == len(data_ref)
-    return evaluate_bleu(data_ref=data_ref, data_sys=predictions, tokenizer=tokenizer)
+    return evaluate_bleu(data_ref=data_ref, data_sys=predictions)
 
 
 bleu = evaluate.load('bleu')
 
 
-def evaluate_bleu(data_ref, data_sys, tokenizer):
+def evaluate_bleu(data_ref, data_sys):
     global bleu
     '''
     predictions (list of strs): Translations to score. predictions = ["hello there general kenobi", "foo bar foobar"]

@@ -8,9 +8,10 @@ import sys
 import copy
 import random
 import time
-from nltk.translate.bleu_score import corpus_bleu,SmoothingFunction
+from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 import torch
 from torch.utils.data import Dataset, TensorDataset, DataLoader, RandomSampler, SequentialSampler
+
 
 class VNHistoryDataLoader(DataLoader):
 
@@ -22,7 +23,7 @@ class VNHistoryDataLoader(DataLoader):
             sampler = SequentialSampler(dataset)
             batch_size = args.predict_batch_size
         super(VNHistoryDataLoader, self).__init__(dataset, sampler=sampler, batch_size=batch_size,
-                                               num_workers=args.num_workers)
+                                                  num_workers=args.num_workers)
 
 
 class VNHistoryDataset(Dataset):
@@ -61,7 +62,7 @@ class VNHistoryDataset(Dataset):
         return len(self.data)
 
     def linearize_v2(self, entity, entity_change, head_ids, rel_ids, tail_ids,
-                        relation_change, cnt_edge, adj_matrix):
+                     relation_change, cnt_edge, adj_matrix):
         # string_label: encoder ids
         # string_label_tokens: encoder tokens
 
@@ -85,10 +86,10 @@ class VNHistoryDataset(Dataset):
                 words_label = rel_ids + rel_label + tail_ids + entity_change[rel[1]][0]
                 words_label_tokens = ' [relation] {} [tail] {}'.format(rel_label_token, rel[1])
                 nodes.extend(
-                        [-1] * (len(rel_ids) + len(rel_label) + len(tail_ids)) + [entity_change[rel[1]][1]] * len(
-                            entity_change[rel[1]][0]))
+                    [-1] * (len(rel_ids) + len(rel_label) + len(tail_ids)) + [entity_change[rel[1]][1]] * len(
+                        entity_change[rel[1]][0]))
                 edges.extend([-1] * len(rel_ids) + [cnt_edge] * len(rel_label) + [-1] * (
-                            len(tail_ids) + len(entity_change[rel[1]][0])))
+                        len(tail_ids) + len(entity_change[rel[1]][0])))
                 if entity_change[entity[0]][1] < len(adj_matrix) and entity_change[rel[1]][1] < len(adj_matrix):
                     adj_matrix[entity_change[entity[0]][1]][entity_change[rel[1]][1]] = cnt_edge
 
@@ -227,7 +228,8 @@ class VNHistoryDataset(Dataset):
         current_text = random.choice(entry['text'])
 
         for word in current_text.split():
-            word_label_ids = self.tokenizer.encode(" {}".format(word), add_special_tokens=False, max_length=256, pad_to_max_length=True)
+            word_label_ids = self.tokenizer.encode(" {}".format(word), add_special_tokens=False, max_length=256,
+                                                   padding=True)
             word_label_tokens = copy.deepcopy(word)
 
             words_label_ids += word_label_ids
@@ -261,7 +263,7 @@ class VNHistoryDataset(Dataset):
             input_edge_ids_ar)
         assert len(decoder_label_ids) == len(decoder_attn_mask) == self.args.max_output_length
 
-        words_label_ids=self.tokenizer.encode(current_text, add_special_tokens=False, max_length=128, pad_to_max_length=True)
+        words_label_ids = self.tokenizer.encode(current_text, add_special_tokens=False, max_length=128, padding=True)
 
         input_ids_ar = torch.LongTensor(input_ids_ar)
         attn_mask_ar = torch.LongTensor(attn_mask_ar)
@@ -276,5 +278,3 @@ class VNHistoryDataset(Dataset):
 
         return input_ids_ar, attn_mask_ar, decoder_label_ids, decoder_attn_mask, \
                input_node_ids_ar, input_edge_ids_ar, node_length_ar, edge_length_ar, adj_matrix_ar, words_label_ar
-
-
