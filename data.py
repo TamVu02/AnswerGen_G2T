@@ -257,12 +257,11 @@ class VNHistoryDataset(Dataset):
             return adj_matrix_tmp
 
         adj_matrix_ar = masked_fill_matrix(adj_matrix, -1, self.args.max_edge_length)
+        words_label_ids = self.tokenizer.encode(current_text, add_special_tokens=False, max_length=self.args.max_output_length)
 
         assert len(input_ids_ar) == len(attn_mask_ar) == self.args.max_input_length == len(input_node_ids_ar) == len(
             input_edge_ids_ar)
-        assert len(decoder_label_ids) == len(decoder_attn_mask) == self.args.max_output_length
-
-        words_label_ids = self.tokenizer.encode(current_text, add_special_tokens=False, max_length=128, padding='max_length')
+        assert len(decoder_label_ids) == len(decoder_attn_mask) == len(words_label_ids) == self.args.max_output_length
 
         input_ids_ar = torch.LongTensor(input_ids_ar)
         attn_mask_ar = torch.LongTensor(attn_mask_ar)
