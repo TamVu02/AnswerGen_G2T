@@ -146,6 +146,7 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
 
 def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=False):
     predictions = []
+    input_trip = []
     # Inference on the test set
     for i, batch in enumerate(dev_dataloader):
         if torch.cuda.is_available():
@@ -159,7 +160,9 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
         # Convert ids to tokens
         for input_, output in zip(batch[0], outputs):
             pred = tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=args.clean_up_spaces)
+            inp = tokenizer.decode(input_, skip_special_tokens=True, clean_up_tokenization_spaces=args.clean_up_spaces)
             predictions.append(pred.strip())
+            input_trip.append(inp.strip())
 
     # Save the generated results
     if save_predictions:
@@ -174,7 +177,7 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
     print('\n==== Current prediction on dev dataset =====')
     for i in range(3):
         randindex = random.randint(0, len(data_ref) - 1)
-        print(f'\tReferences: {data_ref[randindex]}\n\tPrediction: {predictions[randindex]}')
+        print(f'Sample {i}\n\tTriplets: {input_trip[randindex]}\n\tReferences: {data_ref[randindex]}\n\tPrediction: {predictions[randindex]}')
     return evaluate_bleu(data_ref=data_ref, data_sys=predictions)
 
 
