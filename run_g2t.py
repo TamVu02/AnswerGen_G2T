@@ -160,6 +160,8 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
         for input_, output in zip(batch[0], outputs):
             pred = tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=args.clean_up_spaces)
             predictions.append(pred.strip())
+            break
+    print(predictions)
 
     # Save the generated results
     if save_predictions:
@@ -171,7 +173,7 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
 
     data_ref = [data_ele['text'] for data_ele in dev_dataloader.dataset.data]
     assert len(predictions) == len(data_ref)
-    print('\t==== Current prediction on dev dataset =====')
+    print('\n==== Current prediction on dev dataset =====')
     for i in range(3):
         randindex = random.randint(0, len(data_ref) - 1)
         print(f'\tReferences: {data_ref[randindex]}\n\tPrediction: {predictions[randindex]}')
