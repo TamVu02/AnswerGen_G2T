@@ -112,17 +112,20 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
             # Print loss and evaluate on the valid set
             if global_step % args.eval_period == 0:
                 model.eval()
-                curr_em = inference(model if args.n_gpu == 1 else model.module, dev_dataloader, tokenizer, args, logger)['bleu']
-                print(f'Step {global_step} Train loss {np.mean(train_losses)} Learning rate {scheduler.get_lr()[0]} {dev_dataloader.dataset.metric} {curr_em} on epoch={epoch}')
+                curr_em = \
+                    inference(model if args.n_gpu == 1 else model.module, dev_dataloader, tokenizer, args, logger)[
+                        'bleu']
+                print(
+                    f'Step {global_step} Train loss {np.mean(train_losses)} Learning rate {scheduler.get_lr()[0]} {dev_dataloader.dataset.metric} {curr_em} on epoch={epoch}')
                 logger.info("Step %d Train loss %.2f Learning rate %.2e %s %.2f%% on epoch=%d" % (
                     global_step,
                     np.mean(train_losses),
                     scheduler.get_lr()[0],
                     dev_dataloader.dataset.metric,
-                    curr_em*100,
+                    curr_em * 100,
                     epoch))
                 train_losses = []
-                if best_accuracy < curr_em*100:
+                if best_accuracy < curr_em * 100:
                     model_to_save = model.module if hasattr(model, 'module') else model
                     model_to_save.save_pretrained(args.output_dir)
                     logger.info("Saving model with best %s: %.2f%% -> %.2f%% on epoch=%d, global_step=%d" %
@@ -168,6 +171,10 @@ def inference(model, dev_dataloader, tokenizer, args, logger, save_predictions=F
 
     data_ref = [data_ele['text'] for data_ele in dev_dataloader.dataset.data]
     assert len(predictions) == len(data_ref)
+    print('\t==== Current prediction on dev dataset =====')
+    for i in range(3):
+        randindex = random.randint(0, len(data_ref) - 1)
+        print(f'\tReferences: {data_ref[randindex]}\n\tPrediction: {predictions[randindex]}')
     return evaluate_bleu(data_ref=data_ref, data_sys=predictions)
 
 
