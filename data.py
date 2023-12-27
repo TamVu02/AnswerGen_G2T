@@ -261,6 +261,7 @@ class VNHistoryDataset(Dataset):
 
         assert len(input_ids_ar) == len(attn_mask_ar) == self.args.max_input_length == len(input_node_ids_ar) == len(
             input_edge_ids_ar)
+        print(len(decoder_label_ids),'===========',len(decoder_attn_mask),'===========',len(words_label_ids)
         assert len(decoder_label_ids) == len(decoder_attn_mask) == len(words_label_ids) == self.args.max_output_length
 
         input_ids_ar = torch.LongTensor(input_ids_ar)
