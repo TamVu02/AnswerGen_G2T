@@ -192,7 +192,7 @@ def evaluate_bleu(data_ref, data_sys):
      ["foo bar foobar"]
     ]
     '''
-    assert type(data_refs[0]) == list
+    assert type(data_ref[0]) == list
     assert type(data_sys) == list
     try:
         output_metric = bleu.compute(predictions=data_sys, references=data_ref)
