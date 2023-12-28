@@ -8,11 +8,11 @@ CUDA_VISIBLE_DEVICES=0 python /content/AnswerGen_G2T/cli_g2t.py \
         --dataset VNHistory \
         --train_batch_size 16 \
         --predict_batch_size 8 \
-        --max_input_length 256 \
-        --max_output_length 128 \
+        --max_input_length 128 \
+        --max_output_length 64 \
         --append_another_bos \
         --learning_rate 5e-5 \
         --num_train_epochs 20 \
-        --warmup_steps 1600 \
-        --eval_period 400 \
+        --warmup_steps 300 \
+        --eval_period 700 \
         --num_beams 4
