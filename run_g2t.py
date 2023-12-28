@@ -90,7 +90,7 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
             #     for tmp_id in range(9):
             #         print(batch[tmp_id])
             outputs = model(input_ids=batch[0], attention_mask=batch[1],
-                            decoder_input_ids=batch[2], decoder_attention_mask=batch[3], labels=batch[9])
+                            decoder_input_ids=batch[2], decoder_attention_mask=batch[3], labels=batch[4])
             loss = outputs.loss
 
             if args.n_gpu > 1:
@@ -113,8 +113,7 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
             if global_step % args.eval_period == 0:
                 model.eval()
                 curr_em = \
-                    inference(model if args.n_gpu == 1 else model.module, dev_dataloader, tokenizer, args, logger)[
-                        'bleu']
+                    inference(model if args.n_gpu == 1 else model.module, dev_dataloader, tokenizer, args, logger)['bleu']
                 print(
                     f'Step {global_step} Train loss {np.mean(train_losses)} Learning rate {scheduler.get_lr()[0]} {dev_dataloader.dataset.metric} {curr_em} on epoch={epoch}')
                 logger.info("Step %d Train loss %.2f Learning rate %.2e %s %.2f%% on epoch=%d" % (
