@@ -89,8 +89,7 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
             # if global_step == 1:
             #     for tmp_id in range(9):
             #         print(batch[tmp_id])
-            outputs = model(input_ids=batch[0], attention_mask=batch[1],
-                            decoder_input_ids=batch[2], decoder_attention_mask=batch[3], labels=batch[4])
+            outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[4])
             loss = outputs.loss
 
             if args.n_gpu > 1:
