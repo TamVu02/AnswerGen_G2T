@@ -3,7 +3,6 @@ import json
 import re
 import string
 import numpy as np
-from tqdm import tqdm
 import sys
 import copy
 import random

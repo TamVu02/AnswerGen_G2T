@@ -11,8 +11,8 @@ CUDA_VISIBLE_DEVICES=0 python /content/AnswerGen_G2T/cli_g2t.py \
         --max_input_length 128 \
         --max_output_length 64 \
         --append_another_bos \
-        --learning_rate 5e-5 \
-        --num_train_epochs 20 \
-        --warmup_steps 300 \
+        --learning_rate 1e-4 \
+        --num_train_epochs 30 \
+        --warmup_steps 400 \
         --eval_period 700 \
         --num_beams 4

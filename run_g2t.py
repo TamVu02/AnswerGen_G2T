@@ -8,6 +8,7 @@ from transformers import AdamW, get_linear_schedule_with_warmup
 
 # from modeling_t5 import MyT5ForConditionalGeneration as MyT5
 from transformers import T5ForConditionalGeneration as MyT5
+from transformers import AutoModelForSeq2SeqLM
 
 from data import VNHistoryDataset, VNHistoryDataLoader
 from tqdm import tqdm, trange
@@ -81,7 +82,7 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
     train_iterator = trange(int(args.num_train_epochs), desc="Epoch")
     logger.info("Starting training!")
     for epoch in train_iterator:
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration")
+        epoch_iterator = tqdm(train_dataloader, f"Iteration (Epoch {epoch})", bar_format='{l_bar}{bar}|',position=0, leave=True)
         for batch in epoch_iterator:
             global_step += 1
             if torch.cuda.is_available():
@@ -89,7 +90,8 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
             # if global_step == 1:
             #     for tmp_id in range(9):
             #         print(batch[tmp_id])
-            outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[4])
+            outputs = model(input_ids=batch[0], attention_mask=batch[1],
+                            labels=batch[4])
             loss = outputs.loss
 
             if args.n_gpu > 1:
@@ -107,6 +109,9 @@ def train(args, logger, model, train_dataloader, dev_dataloader, optimizer, sche
                 optimizer.step()  # We have accumulated enough gradients
                 scheduler.step()
                 model.zero_grad()
+
+            if global_step % 100 == 0:
+                epoch_iterator.set_postfix({"Loss": loss.data})
 
             # Print loss and evaluate on the valid set
             if global_step % args.eval_period == 0:
